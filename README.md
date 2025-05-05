@@ -12,20 +12,11 @@ Ce projet utilise l'intelligence artificielle pour aider à faire correspondre l
 
 ## Aperçu de l'Application
 
-<div style="display: flex; justify-content: space-between;">
-    <div style="flex: 1;">
-        <p><strong>Étapes 1 & 2: Import du CV et résumé</strong></p>
-        <img src="screenshot_etape1_2.png" alt="Import du CV et résumé" width="100%">
-    </div>
-    <div style="flex: 1;">
-        <p><strong>Étape 3: Correspondance avec offres d'emploi</strong></p>
-        <img src="screenshot_etape3.png" alt="Correspondance avec offres d'emploi" width="100%">
-    </div>
-    <div style="flex: 1;">
-        <p><strong>Génération de Lettre de Motivation</strong></p>
-        <img src="screenshot_lettre.png" alt="Génération de lettre de motivation" width="100%">
-    </div>
-</div>
+<p align="center">
+  <img src="images/Etape 1 & 2.png" alt="Import du CV et résumé" width="32%" />
+  <img src="images/Etape 3.png" alt="Correspondance avec offres d'emploi" width="32%" />
+  <img src="images/Lettre de motivation.png" alt="Génération de lettre de motivation" width="32%" />
+</p>
 
 ## Installation et Utilisation
 1. **Cloner le dépôt**: Clonez ce dépôt sur votre machine locale.
