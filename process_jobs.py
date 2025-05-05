@@ -175,7 +175,7 @@ def configure_retrievers(data: pd.DataFrame,
     if bm25_retriever and chroma_retriever:
         ensemble_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, chroma_retriever],
-            weights=[0.5, 0.5]
+            weights=[0.1, 0.9]
         )
         print("Ensemble Retriever (BM25 + Chroma) configuré.")
         return ensemble_retriever

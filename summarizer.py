@@ -17,7 +17,7 @@ def summarize_cv_text(cv_text: str, openai_api_key: str) -> Optional[str]:
             model="gpt-4o-mini-2024-07-18",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=600,
-            temperature=0.2
+            temperature=0
         )
         summary = response.choices[0].message.content.strip()
         return summary
