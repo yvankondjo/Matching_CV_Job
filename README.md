@@ -10,6 +10,11 @@ Ce projet utilise l'intelligence artificielle pour aider à faire correspondre l
 - **Génération de Lettres de Motivation**: Génération de lettres de motivation personnalisées pour les offres d'emploi correspondantes.
 - **Téléchargement de Lettres de Motivation**: Possibilité de télécharger les lettres de motivation générées.
 
+## Source des Données
+Les offres d'emploi utilisées dans ce projet sont collectées grâce à mes projets de scraping dédiés :
+- [Scraping LinkedIn Job](https://github.com/yvankondjo/scrapping_LinkendIn_Job) - Extraction des offres d'emploi depuis LinkedIn
+- [Scraping Indeed Job](https://github.com/yvankondjo/scraping_indeed_job) - Extraction des offres d'emploi depuis Indeed
+
 ## Aperçu de l'Application
 
 <p align="center">
