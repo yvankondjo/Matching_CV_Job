@@ -24,6 +24,10 @@ openai_api_key = os.environ.get('OPENAI_API_KEY', '')
 @st.cache_resource(show_spinner=False)
 def load_resources():
     job_data = load_and_clean_data('jobsspider_2024-01-23T04-34-07+00-00.csv')
+    if job_data is None:
+        st.error("Erreur lors du chargement des données des offres.")
+        return None, None, None
+        
     chroma_client = chromadb.PersistentClient(path="./chroma_db")
     if not openai_api_key:
         st.error("Clé API OpenAI manquante dans .env. Impossible d'initialiser les embeddings.")
@@ -41,6 +45,9 @@ def load_resources():
         )
         
         retriever = configure_retrievers(job_data, chroma_client, "job", langchain_embeddings, k=100)
+        if retriever is None:
+            st.error("Impossible de configurer le retriever hybride.")
+            return None, None, None
         return retriever, job_data, chroma_vector_store
     except Exception as e:
         st.error(f"Erreur lors de l'initialisation des ressources (embeddings/chroma): {e}")
@@ -119,44 +126,59 @@ if cv_file:
                         results = retriever.get_relevant_documents(summary)
                         
                         result_ids = [doc.metadata.get('job_id') for doc in results if doc.metadata.get('job_id')]
+                        st.write("IDs des résultats du retriever:", result_ids)
+                        
                         scores = {}
+                        score_results_debug = None
                         if result_ids:
                             try:
-                                score_results = chroma_vector_store.similarity_search_with_relevance_scores(summary, k=len(result_ids)*2, filter={'job_id': {'$in': result_ids}})
+                                score_results = chroma_vector_store.similarity_search_with_relevance_scores(
+                                    summary, 
+                                    k=max(20, len(result_ids)),
+                                )
+                                score_results_debug = score_results
                                 for doc_with_score, score_val in score_results:
                                     doc_id = doc_with_score.metadata.get('job_id')
-                                    if doc_id:
-                                        scores[doc_id] = max(scores.get(doc_id, 0), score_val) 
+                                    if doc_id in result_ids:
+                                        scores[doc_id] = max(scores.get(doc_id, 0), score_val)
                             except Exception as e:
-                                st.warning(f"Impossible de récupérer les scores de similarité Chroma: {e}")
+                                st.error(f"Erreur lors de la récupération des scores Chroma: {e}")
+                                st.warning("Les scores de similarité n'ont pas pu être récupérés.")
+                        
+                        with st.expander("Infos de débogage des scores"):
+                             st.write("Résultats bruts de similarity_search_with_relevance_scores:", score_results_debug)
+                             st.write("Dictionnaire des scores construit:", scores)
                                 
                     if not results:
                         st.warning("Aucune offre d'emploi trouvée.")
                     else:
+                        st.markdown("--- Affichage des résultats ---")
                         for i, doc in enumerate(results):
                             meta = doc.metadata
                             doc_id = meta.get('job_id')
                             score = scores.get(doc_id) if doc_id else None 
                             
                             st.markdown(f"**{i+1}. {meta.get('job_title', 'Titre inconnu')}**")
-                            st.markdown(f"Entreprise : {meta.get('company_name', 'N/A')}")
-                            st.markdown(f"Lieu : {meta.get('company_location', 'N/A')}")
+                            st.markdown(f"   Entreprise : {meta.get('company_name', 'N/A')}")
+                            st.markdown(f"   Lieu : {meta.get('company_location', 'N/A')}")
+                            st.markdown(f"   (Debug ID: {doc_id}, Score Trouvé: {score})") 
+
                             if score is not None:
                                 st.progress(float(score))
-                                st.markdown(f"<span style='color: #888; font-size: 0.9em;'>Score de similarité : {score:.3f}</span>", unsafe_allow_html=True)
+                                st.markdown(f"<span style='color: #6c757d; font-size: 0.9em;'>Score de similarité : {score:.3f}</span>", unsafe_allow_html=True)
+                            else:
+                                st.markdown("<span style='color: #adb5bd; font-size: 0.9em;'>Score non disponible</span>", unsafe_allow_html=True)
                                 
-                            st.markdown(f"[Voir l'offre]({meta.get('job_description_url', '#')})")
-                            st.markdown(f"<div style='color: #555; font-size: 0.95em;'>{doc.page_content[:350]}...</div>", unsafe_allow_html=True)
+                            st.markdown(f"   [Voir l'offre]({meta.get('job_description_url', '#')})")
+                            st.markdown(f"   <div style='color: #555; font-size: 0.95em;'>{doc.page_content[:250]}...</div>", unsafe_allow_html=True)
                             
-                            with st.expander("Générer une lettre de motivation pour cette offre"):
+                            with st.expander("Générer une lettre de motivation"):
                                 btn_key = f"cover_{doc_id if doc_id else i}"
                                 if st.button(f"Générer la lettre", key=btn_key):
                                     job_details_full = meta
                                     job_details_full['job_description'] = doc.page_content
-                                    
-                                    with st.spinner("Génération de la lettre de motivation..."):
+                                    with st.spinner("Génération de la lettre..."):
                                         lettre = generate_cover_letter(summary, job_details_full, openai_api_key)
-                                    
                                     if "Erreur" in lettre:
                                         st.error(lettre)
                                     else:
